@@ -7,10 +7,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
+import java.io.Serializable;
 import java.sql.Connection;
 
 @Component(immediate = true, service = DatabaseService.class)
-public class DatabaseServiceImpl implements DatabaseService {
+public class DatabaseServiceImpl implements DatabaseService, Serializable {
     private final Logger logger = LoggerFactory.getLogger(DatabaseServiceImpl.class);
 
     @Reference
