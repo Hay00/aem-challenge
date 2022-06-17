@@ -15,7 +15,13 @@ public class Client {
     private int id;
     private String nome;
 
+    public boolean hasMissingFields() {
+        return nome == null || nome.isEmpty();
+    }
+
     public boolean isValid() {
         return id > 0 && nome != null && !nome.isEmpty();
     }
+
+
 }

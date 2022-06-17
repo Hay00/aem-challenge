@@ -87,6 +87,7 @@ public class ClientDaoImpl implements ClientDao, Serializable {
         String sql = "UPDATE clients SET nome = ? WHERE id = ?";
         try (Connection conn = databaseService.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
+
             ps.setString(1, client.getNome());
             ps.setInt(2, client.getId());
             ps.executeUpdate();
@@ -98,7 +99,7 @@ public class ClientDaoImpl implements ClientDao, Serializable {
         String sql = "DELETE FROM clients WHERE id = ?";
         try (Connection conn = databaseService.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            
+
             ps.setInt(1, id);
             int deleted = ps.executeUpdate();
 
@@ -126,7 +127,7 @@ public class ClientDaoImpl implements ClientDao, Serializable {
     }
 
     /**
-     * Convert a ResultSet to a Client
+     * Converts a ResultSet to a Client
      *
      * @param rs ResultSet
      * @return Client

@@ -1,17 +1,14 @@
 package com.adobe.aem.challenge.core.servlets;
 
 import com.adobe.aem.challenge.core.exceptions.ClientNotFoundException;
-import com.adobe.aem.challenge.core.exceptions.ProductNotFoundException;
+import com.adobe.aem.challenge.core.exceptions.RequiredFieldsException;
 import com.adobe.aem.challenge.core.models.Client;
 import com.adobe.aem.challenge.core.service.ClientService;
 import com.adobe.aem.challenge.core.utils.RequestResponse;
 import com.fasterxml.jackson.core.JacksonException;
-import com.fasterxml.jackson.core.exc.StreamReadException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import org.apache.commons.io.IOUtils;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
@@ -26,8 +23,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static org.apache.sling.api.servlets.ServletResolverConstants.*;
 
@@ -61,7 +56,7 @@ public class ClientServlet extends SlingAllMethodsServlet {
             }
         } catch (NumberFormatException e) {
             RequestResponse.errorMessage(resp, HttpServletResponse.SC_BAD_REQUEST, INVALID_ID);
-        } catch (ProductNotFoundException e) {
+        } catch (ClientNotFoundException e) {
             RequestResponse.errorMessage(resp, HttpServletResponse.SC_NOT_FOUND, e.getMessage());
         } catch (Exception e) {
             RequestResponse.errorMessage(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
@@ -70,24 +65,24 @@ public class ClientServlet extends SlingAllMethodsServlet {
 
     @Override
     protected void doPost(final SlingHttpServletRequest req, final SlingHttpServletResponse resp) throws IOException {
-        String jsonBody = IOUtils.toString(req.getInputStream(), StandardCharsets.UTF_8);
         try {
-            // Array of clients from json
-            List<Client> clients = new ObjectMapper().readValue(jsonBody, new TypeReference<List<Client>>() {
-            });
-            clientService.save(clients);
-            RequestResponse.send(resp, HttpServletResponse.SC_OK, new Gson().toJson(clients));
-        } catch (JacksonException jacksonException) {
-            try {
+            String jsonBody = IOUtils.toString(req.getInputStream(), StandardCharsets.UTF_8);
+            if (jsonBody.contains("[")) {
+                // Array of clients from json
+                List<Client> clients = new ObjectMapper().readValue(jsonBody, new TypeReference<List<Client>>() {
+                });
+                clientService.save(clients);
+                RequestResponse.send(resp, HttpServletResponse.SC_OK, new Gson().toJson(clients));
+            } else {
                 // Just one client from json
                 Client newClient = new ObjectMapper().readValue(jsonBody, Client.class);
                 clientService.save(newClient);
                 RequestResponse.send(resp, HttpServletResponse.SC_OK, new Gson().toJson(newClient));
-            } catch (JacksonException e) {
-                RequestResponse.errorMessage(resp, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
-            } catch (Exception e) {
-                RequestResponse.errorMessage(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
             }
+        } catch (JacksonException e) {
+            RequestResponse.errorMessage(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid client");
+        } catch (RequiredFieldsException e) {
+            RequestResponse.errorMessage(resp, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
         } catch (Exception e) {
             RequestResponse.errorMessage(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }
@@ -97,16 +92,14 @@ public class ClientServlet extends SlingAllMethodsServlet {
     protected void doPut(final SlingHttpServletRequest req, final SlingHttpServletResponse resp) throws IOException {
         try {
             Client client = new ObjectMapper().readValue(req.getReader(), Client.class);
-            if (client.isValid()) {
-                clientService.update(client);
-                RequestResponse.send(resp, HttpServletResponse.SC_OK, new Gson().toJson(client));
-            } else {
-                RequestResponse.errorMessage(resp, HttpServletResponse.SC_BAD_REQUEST, "Missing or invalid client data");
-            }
+            clientService.update(client);
+            RequestResponse.send(resp, HttpServletResponse.SC_OK, new Gson().toJson(client));
         } catch (NumberFormatException e) {
             RequestResponse.errorMessage(resp, HttpServletResponse.SC_BAD_REQUEST, INVALID_ID);
-        } catch (StreamReadException | DatabindException e) {
+        } catch (JacksonException e) {
             RequestResponse.errorMessage(resp, HttpServletResponse.SC_BAD_REQUEST, "Missing or invalid client data");
+        } catch (RequiredFieldsException e) {
+            RequestResponse.errorMessage(resp, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
         } catch (ClientNotFoundException e) {
             RequestResponse.errorMessage(resp, HttpServletResponse.SC_NOT_FOUND, e.getMessage());
         } catch (Exception e) {

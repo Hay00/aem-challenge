@@ -9,13 +9,17 @@ import java.util.List;
 public interface ProductService {
     List<Product> getProducts(boolean orderByPrice, String contains) throws SQLException;
 
-    Product getProduct(int id) throws SQLException;
+    Product getById(int id) throws SQLException;
 
     Product save(Product product) throws SQLException;
 
-    Product update(int id, Product product) throws SQLException, ProductNotFoundException;
+    List<Product> save(List<Product> products) throws SQLException;
+
+    void update(Product product) throws SQLException, ProductNotFoundException;
 
     void delete(int id) throws SQLException, ProductNotFoundException;
+
+    void delete(List<Integer> ids) throws SQLException;
 
     String strToJson(Object obj);
 }

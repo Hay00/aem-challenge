@@ -19,6 +19,10 @@ public class Product {
     private String categoria;
     private BigDecimal preco;
 
+    public boolean hasMissingFields() {
+        return nome == null || nome.isEmpty() || categoria == null || categoria.isEmpty() || preco == null;
+    }
+
     public boolean isValid() {
         return id > 0 && nome != null && !nome.isEmpty() && categoria != null && !categoria.isEmpty() && preco != null;
     }
